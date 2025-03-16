@@ -1,0 +1,191 @@
+<html>
+	<head>
+		<title>control-vlc</title>
+		<link rel="icon" type="image/png" href="/image.png" />
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+		<style>
+			body {
+				background-color: #36474f;
+				font-family: monospace;
+				/* touch-action: manipulation; */
+				touch-action: none;
+			}
+			.grid {
+				position: relative;
+				top: 50%;
+				left: 50%;
+				-ms-transform: translate(-50%, -50%);
+				transform: translate(-50%, -50%);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				flex-flow: row wrap;
+				max-width: 400px;
+				margin: 0;
+			}
+			.cell {
+				flex: 0 1 30%;
+				font-size: 5em;
+				user-select: none;
+				text-align: center;
+				margin: 2px;
+			}
+			.btn-default {
+				background: #546f7a;
+				color: #fefffd;
+				padding-bottom: 20px;
+				min-height: 100px;
+			}
+			.btn-red {
+				background: #7a5454;
+				color: #fefffd;
+				padding-bottom: 20px;
+				min-height: 100px;
+			}
+			.btn-alt {
+				background: #48616b;
+				color: #fefffd;
+				padding-bottom: 20px;
+				min-height: 100px;
+			}
+			.hide {
+				display: none;
+			}
+			.modalPlaylist {
+				background-color: #5e7783;
+				width: 90%;
+				height: 400px;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+			.playlistContainer {
+				height: 400px;
+				overflow-y: overlay;
+				overflow-x: hidden;
+				font-size: 2.5em;
+			}
+			.playlistList {
+				cursor: default;
+				list-style-type: none;
+				padding-inline-start: 0;
+				margin: 0;
+			}
+			.playlistList > li {
+				margin: 5px;
+				padding: 5px;
+				background-color: #f1f1f1;
+				overflow: hidden;
+				max-height: 38px;
+				line-break: anywhere;
+			}
+		</style>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			console.log("control-vlc");
+			const sock = io();
+			sock.on('msg', (text) => {
+				console.log(text);
+				sock.emit('msg', 'PING SV');
+			});
+			function btnEjecutarAccion(el, action, sfx) {
+				if (sfx != '') {
+					const audio = document.getElementById("sound");
+					audio.src = ("/sfx/" + sfx + ".mp3");
+					audio.currentTime = 0;
+					audio.play();
+				}
+				if (action === "SHUTDOWN") {
+					el.style.backgroundColor = "#811c1c";
+					let text = "¿APAGAR?";
+					setTimeout(() => {
+						if (confirm(text)) {
+							sock.emit('msg', action);
+						}
+						el.style.backgroundColor = "#7a5454";
+					}, 150);
+				} else {
+					el.style.backgroundColor = "#8c9ca3";
+					setTimeout(() => {
+						el.style.backgroundColor = (el.className == "btn-default" ? "#546f7a" : "#48616b");
+					}, 150);
+					sock.emit('msg', action);
+				}
+			}
+			async function mostrarPlaylist() {
+				const audio = document.getElementById("sound");
+				audio.src = ("/sfx/ch.mp3");
+				audio.currentTime = 0;
+				audio.play();
+				let pl = await fetch('/playlist').then((data) => {
+					return data.json().then((json) => {
+						return json;
+					});
+				}).catch((err) => {
+					// console.log(err);
+					return null;
+				});
+				// console.log(pl);
+				if (pl != null) {
+					document.getElementById("playlistList").innerHTML = "";
+					(pl.playlist).forEach((item) => {
+						let li = document.createElement("LI");
+						li.innerText = item.nombre;
+						li.setAttribute("data-canal-id", item.id);
+						document.getElementById("playlistList").appendChild(li);
+					});
+					const modalPlaylist = document.getElementById("modalPlaylist");
+					modalPlaylist.classList.remove("hide");
+					document.getElementById("playlistContainer").scrollTop = 0;
+				}
+			}
+			function canalClick(e) {
+				e = e || window.event;
+				const el = e.target || e.srcElement;
+				// console.log(el.innerText);
+				const audio = document.getElementById("sound");
+				audio.src = ("/sfx/ch.mp3");
+				audio.currentTime = 0;
+				audio.play();
+				const modalPlaylist = document.getElementById("modalPlaylist");
+				modalPlaylist.classList.add("hide");
+				const canalId = el.getAttribute("data-canal-id");
+				fetch('/play/' + canalId);
+			}
+		</script>
+	</head>
+	<body>
+		<div class="grid">
+			<div class="cell">
+				<div class="btn-alt" onclick="btnEjecutarAccion(this, 'VOL_MUTE', '')">x</div>
+			</div>
+			<div class="cell">
+				<div class="btn-default" onclick="btnEjecutarAccion(this, 'CH_PREV', 'ch')">↑</div>
+			</div>
+			<div class="cell">
+				<div class="btn-red" onclick="btnEjecutarAccion(this, 'SHUTDOWN', 'shutdown')">0</div>
+			</div>
+			<div class="cell">
+				<div class="btn-default" onclick="btnEjecutarAccion(this, 'VOL_DOWN', 'voldown')">←</div>
+			</div>
+			<div class="cell">
+				<div class="btn-alt" onclick="mostrarPlaylist()">#</div>
+			</div>
+			<div class="cell">
+				<div class="btn-default" onclick="btnEjecutarAccion(this, 'VOL_UP', 'volup')">→</div>
+			</div>
+			<div class="cell"></div>
+			<div class="cell">
+				<div class="btn-default" onclick="btnEjecutarAccion(this, 'CH_NEXT', 'ch')">↓</div>
+			</div>
+			<div class="cell"></div>
+		</div>
+		<div id="modalPlaylist" class="modalPlaylist hide">
+			<div id="playlistContainer" class="playlistContainer">
+				<ul id="playlistList" class="playlistList" onclick="canalClick(event)"></ul>
+			</div>
+		</div>
+		<audio id="sound" src=""></audio>
+	</body>
+</html>

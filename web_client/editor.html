@@ -1,0 +1,152 @@
+<html>
+	<head>
+		<title>control-vlc - editor</title>
+		<link rel="icon" type="image/png" href="/image.png" />
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+		<style>
+			body {
+				background-color: #36474f;
+        color: #fefffd;
+				font-family: monospace;
+				touch-action: none;
+			}
+			.btn-default {
+				background: #546f7a;
+				color: #fefffd;
+			}
+			.btn-red {
+				background: #7a5454;
+				color: #fefffd;
+			}
+			.btn-alt {
+				background: #48616b;
+				color: #fefffd;
+			}
+			.hide {
+				display: none;
+			}
+      .mt {
+				margin-top: 10px;
+        padding-right: 10vw;
+        padding-left: 10vw;
+			}
+      .marginzero {
+				margin: 0;
+			}
+      .txtAreaURL {
+        width: 100%;
+        height: 100px;
+			}
+      button {
+        padding: 10px;
+        margin: 10px;
+      }
+		</style>
+		<script>
+      let chList = [];
+      window.onload = (event) => {
+        fetch("/list.json").then(res => res.json().then((list) => {
+          console.log(list);
+          chList = list;
+          let opt;
+          chList.forEach((ch, i) => {
+            opt = new Option(ch.name, i);
+            document.getElementById("chsSelect").appendChild(opt);
+          });
+          document.getElementById("chsSelect").dispatchEvent(new Event('change'));
+        }));
+      };
+      function selectChange(el) {
+				const ch = chList[Number(el.value)];
+				document.getElementById("chNum").value = ch.number;
+        document.getElementById("chName").value = ch.name;
+        document.getElementById("chOpts").value = ch.opts || "";
+				document.getElementById("chUrl").value = ch.url;
+			}
+      function updateCh() {
+				const idCh = Number(document.getElementById("chsSelect").value);
+				chList[idCh].number = Number(document.getElementById("chNum").value);
+        chList[idCh].name = document.getElementById("chName").value;
+        chList[idCh].opts = document.getElementById("chOpts").value;
+				chList[idCh].url = document.getElementById("chUrl").value;
+				document.getElementById("chsSelect")
+					.options[document.getElementById("chsSelect").selectedIndex]
+					.innerText = chList[idCh].name;
+        alert("OK");
+			}
+      function addCh() {
+				let chNum = Number(document.getElementById("chNum").value);
+        let chName = document.getElementById("chName").value;
+        let chOpts = document.getElementById("chOpts").value;
+				let chUrl = document.getElementById("chUrl").value;
+				const ch = { number: chNum, name: chName, opts: chOpts, url: chUrl };
+				chList.push(ch);
+				let optVal = (document.getElementById("chsSelect").lastChild) ?
+					(Number(document.getElementById("chsSelect").lastChild.value) + 1) : 
+					1;
+				let opt = new Option(chName, optVal, false, true);
+				document.getElementById("chsSelect").appendChild(opt);
+				alert("OK");
+			}
+      function remCh() {
+				const idCh = Number(document.getElementById("chsSelect").value);
+				chList[idCh].number = -1;
+        chList[idCh].name = "";
+        chList[idCh].opts = "";
+				chList[idCh].url = "";
+				document.getElementById("chNum").value = "";
+        document.getElementById("chName").value = "";
+        document.getElementById("chOpts").value = "";
+				document.getElementById("chUrl").value = "";
+				document.getElementById("chsSelect")
+					.options[document.getElementById("chsSelect").selectedIndex]
+					.remove();
+				document.getElementById("chsSelect").value = -1;
+				alert("OK");
+			}
+      function updateUpdated(el) {
+        el.disabled = true;
+        let newChList = chList.filter((e) => e.number != -1).sort((a, b) => a.number - b.number);
+        fetch('/list/update', {
+          method: 'POST',
+          body: JSON.stringify(newChList),
+          headers: { 'Content-Type': 'application/json' }
+        }).then(() => {
+          alert("OK");
+        }).catch(err => {
+          console.log(err);
+        });
+      }
+		</script>
+	</head>
+	<body>
+		<div class="mt">
+      <p class="marginzero">Elegir canal</p>
+      <select id="chsSelect" onchange="selectChange(this)"></select>
+    </div>
+    <div class="mt">
+      <p class="marginzero">Numero</p>
+      <input type="text" id="chNum" maxlength="4" style="width: 100%;" />
+    </div>
+    <div class="mt">
+      <p class="marginzero">Nombre</p>
+      <input type="text" id="chName" maxlength="100" style="width: 100%;" />
+    </div>
+    <div class="mt">
+      <p class="marginzero">Opciones</p>
+      <input type="text" id="chOpts" style="width: 100%;" />
+    </div>
+    <div class="mt">
+      <p class="marginzero">URL</p>
+      <textarea class="txtAreaURL" id="chUrl"></textarea>
+    </div>
+    <div class="mt" style="text-align: center;">
+      <button class="btn-alt" onclick="updateCh()">Modificar</button>
+      <button class="btn-default" onclick="addCh()">Agregar</button>
+      <button class="btn-red" onclick="remCh()">Eliminar</button>
+    </div>
+    <div class="mt" style="text-align: center;">
+      <button class="mt" onclick="updateUpdated(this)">Subir actualizado</button>
+    </div>
+	</body>
+</html>

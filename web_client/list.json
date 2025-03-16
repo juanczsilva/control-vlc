@@ -1,0 +1,34 @@
+[
+  {
+    "number": 1,
+    "name": "Big Buck Bunny",
+    "opts": "",
+    "url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+  },
+  {
+    "number": 5,
+    "name": "YouTube NASA",
+    "url": "https://www.youtube.com/@NASA/live"
+  },
+  {
+    "number": 8,
+    "name": "Elephants Dream",
+    "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+  },
+  {
+    "number": 9,
+    "name": "For Bigger Blazes",
+    "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+  },
+  {
+    "number": 45,
+    "name": "Twitch ShoutTV",
+    "opts": "#EXTVLCOPT:http-user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "url": "http://localhost:8080/streamlink?ch=shouttv"
+  },
+  {
+    "number": 80,
+    "name": "Tears Of Steel",
+    "url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+  }
+]
